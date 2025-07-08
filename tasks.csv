@@ -1,3 +1,5 @@
 id,title,due_date,due_time,created_at,completed
-1,Read a book,2025-07-07,22:00:00,2025-07-07 20:13:47.444812,True
-2,Write diary,2025-07-07,22:30:00,2025-07-07 20:14:25.019279,False
+1,Read a book,7/8/2025,22:00:00,7/8/2025 12:22,TRUE
+3,Complete ToDo project,7/8/2025,21:00:00,7/8/2025 12:23,FALSE
+4,Wash Clothes,7/8/2025,17:00:00,7/8/2025 12:23,FALSE
+5,Check Papai's studies,7/8/2025,19:00:00,7/8/2025 12:24,FALSE

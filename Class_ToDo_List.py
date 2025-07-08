@@ -1,7 +1,6 @@
 from datetime import datetime, date, time
 from typing import Dict, List, Literal, Any
 import pandas as pd
-from IPython.display import display
 
 class ToDo_List:
     attributes = {"id": int, 
@@ -34,20 +33,32 @@ class ToDo_List:
         
         for attr in ToDo_List.attributes:
              
-            if attr == "id" and attr not in task.keys():    # Generates the id automatically if not present
-                self.num_of_tasks += 1
-                task[attr] = self.num_of_tasks
+            if attr == "id":    # Generates the id automatically if not present
+                if attr not in task:
+                    self.num_of_tasks += 1
+                    task[attr] = self.num_of_tasks
+                elif not isinstance(task[attr], int):
+                    task[attr] = int(task[attr])
 
-            elif attr == "created_at" and attr not in task.keys():      # Generates the creation time automatically if not present
-                creation_time = datetime.now()
-                task[attr] = creation_time
+            elif attr == "created_at":      # Generates the creation time automatically if not present
+                if attr not in task:
+                    creation_time = datetime.now().replace(microsecond=0)
+                    task[attr] = creation_time
+                elif not isinstance(task[attr], datetime):
+                    task[attr] = datetime.strptime(task[attr], "%Y-%m-%d %H:%M:%S")
 
             elif attr == "due_date" and not isinstance(task[attr], date):        # Converts due_date from string to date object if not already
                 task[attr] = datetime.strptime(task[attr], "%Y-%m-%d").date()
 
             elif attr == "due_time":        # Converts due_time from string to time object if not already
                 if task[attr] != 'NA' and not isinstance(task[attr], time):
-                    task[attr] = datetime.strptime(task[attr], "%H:%M").time()
+                    task[attr] = datetime.strptime(task[attr], "%H:%M:%S").time()
+
+            elif attr == "completed" and not isinstance(task[attr], bool):      # Convert string values to boolean
+                if task[attr].lower() == "true":
+                    task[attr] = True
+                else:
+                    task[attr] = False
 
             # Check if the attribute is of the expected type
             elif not isinstance(task[attr], ToDo_List.attributes[attr]):
@@ -55,19 +66,20 @@ class ToDo_List:
             
         return True
 
-    def __init__(self, tasklist: pd.DataFrame = pd.DataFrame()) -> None:
+    def __init__(self, tasklist: List[Dict[str, Any]] = []) -> None:
         """
         Initializes a ToDo_List instance with an optional list of tasks.
 
         **Parameters:**
-            - `tasklist` (pd.Dataframe, optional):  
+            - `tasklist` (List[Dict[str, Any]], optional):  
               A list of tasks, where each task is a dictionary containing task attributes.  
               If no tasklist is provided, it initializes with an empty list.
 
         *Each task dictionary should contain the following keys:*
             - `title` (str): Title of the task.  
             - `due_date` (str): Due date of the task in YYYY-MM-DD format.  
-            - `due_time` (str): Due time of the task in 24 hr format (HH:MM). 'NA' if no time is set.  
+            - `due_time` (str): Due time of the task in 24 hr format (HH:MM). 'NA' if no time is set. 
+            - `priority` (str): Priority of the task. Must be one of (high, medium, low).
             - `completed` (bool): Indicates whether the task is completed or not.
 
         **Attributes:**
@@ -80,11 +92,13 @@ class ToDo_List:
         **Example:**
             >>> todo = ToDo_List([
             ...     {"id": 1, "title": "Sample Task", "due_date": "2023-10-01",
-            ...      "due_time": "12:00", "created_at": "2023-09-30 10:00", "completed": False}
+            ...      "due_time": "12:00", "priority": "high", "created_at": "2023-09-30 10:00", "completed": False}
             ... ])
         """
-        if not isinstance(tasklist, pd.DataFrame):
-            raise TypeError("tasklist must be a pandas DataFrame.")
+        if not isinstance(tasklist, list):
+            raise TypeError("tasklist must be a list.")
+        if not all(isinstance(task, dict) for task in tasklist):
+            raise TypeError("tasks must be dictionaries")
         
         self.num_of_tasks = 0
 
@@ -106,12 +120,13 @@ class ToDo_List:
             `str`:  A formatted string representation of the task, with each attribute on a new line.
         
         **Example:**
-            >>> task = {"id": 1, "title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "created_at": "2023-09-30 10:00", "completed": False}
+            >>> task = {"id": 1, "title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high", "created_at": "2023-09-30 10:00", "completed": False}
             >>> print(ToDo_List.task_to_str(task))
             id: 1
             title: Sample Task
             due_date: 2023-10-01
             due_time: 12:00
+            priority: high
             created_at: 2023-09-30 10:00
             completed: False
         """
@@ -129,25 +144,42 @@ class ToDo_List:
         Asks the user to input details for a new task.
 
         **Returns:**
-            `Dict[str, Any]`: A dictionary representing the new task with attributes like id, title, due_date, due_time, created_at, and completed.
+            `Dict[str, Any]`: A dictionary representing the new task with attributes like id, title, due_date, due_time, priority, created_at, and completed.
         """
         title = input("Enter the task: ")
-        duedate = input("Enter due date (in DD/MM/YYYY format):")
+        duedate = input("Enter due date (in DD/MM/YYYY format): ")
         duetime = input("Enter due time if any, else leave blank (in 24 hr format: HH:MM): ")
+        priority = input("Enter the priority of the task (high, medium, low): ")
 
         self.num_of_tasks += 1
         task_id =  self.num_of_tasks
-        due_date = datetime.strptime(duedate, "%d/%m/%Y").date()
+
+        try:
+            due_date = datetime.strptime(duedate, "%d/%m/%Y").date()    # Converts due date from string to date object
+        except Exception:
+            raise ValueError("Due date must be in DD/MM/YYYY format.")
 
         if duetime == '':
             due_time = 'NA'
         else:
-            due_time = datetime.strptime(duetime, "%H:%M").time()
+            try:
+                due_time = datetime.strptime(duetime, "%H:%M").time()   # Converts due time from string to time object
+            except Exception:
+                raise ValueError("Due time must be in 24 hr format (HH:MM).")
         
-        created_at = datetime.now()
+        priority = priority.lower()
+
+        while True:
+            if priority not in ["high", "medium", "low"]:
+                print("Priority must be one of (high, medium, low)")
+                priority = input("Enter again: ")
+            else:
+                break
+
+        created_at = datetime.now().replace(microsecond=0)
         completed = False
 
-        values = [task_id, title, due_date, due_time, created_at, completed]
+        values = [task_id, title, due_date, due_time, priority, created_at, completed]
         task = {attribute: value for (attribute, value) in zip(ToDo_List.attributes, values)}
 
         return task
@@ -162,7 +194,8 @@ class ToDo_List:
         *It should contain the following keys:*
             - `title` (str): Title of the task.  
             - `due_date` (str): Due date of the task in YYYY-MM-DD format.  
-            - `due_time` (str): Due time of the task in 24 hr format (HH:MM). 'NA' if no time is set.  
+            - `due_time` (str): Due time of the task in 24 hr format (HH:MM). 'NA' if no time is set. 
+            - `priority` (str): Priority of the task. Must be one of (high, medium, low).
             - `completed` (bool): Indicates whether the task is completed or not.
 
         **Returns:**
@@ -173,13 +206,14 @@ class ToDo_List:
             - `ValueError`: If the task dictionary does not contain all required attributes.
 
         **Example:**
-            >>> task = {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "completed": False}
+            >>> task = {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high, "completed": False}
             >>> todo = ToDo_List()
             >>> print(todo.add_task(task))
             id: 1
             title: Sample Task
             due_date: 2023-10-01
             due_time: 12:00
+            priority: high
             created_at: 2023-09-30 10:00
             completed: False
         """
@@ -192,15 +226,15 @@ class ToDo_List:
         Displays the current tasklist in a tabular format using pandas DataFrame.
         """
         tasklist = pd.DataFrame(self.tasklist)
-        display(tasklist)
+        print(tasklist)
 
-    def modify_task(self, id: int, attribute: Literal["title", "due_date", "due_time"], new_value) -> str:
+    def modify_task(self, id: int, attribute: Literal["title", "due_date", "due_time", "priority"], new_value) -> str:
         """
         Modifies an existing task in the tasklist.
 
         **Parameters:**
             - `id` (int): The ID of the task to be modified.
-            - `attribute` (Literal["title", "due_date", "due_time"]): The attribute of the task to be modified.
+            - `attribute` (Literal["title", "due_date", "due_time", "priority"]): The attribute of the task to be modified.
             - `new_value`: The new value for the specified attribute.
         
         **Returns:**
@@ -212,25 +246,33 @@ class ToDo_List:
 
         **Example:**
             >>> todo = ToDo_List([
-            ...     {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "completed": False}
+            ...     {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high", "completed": False}
             ... ])
-            >>> print(todo.modify_task(1, "title", "Updated Task"))
+            >>> print(todo.modify_task(1, "title", "Updated Task", "high"))
             id: 1
             title: Updated Task
             due_date: 2023-10-01
             due_time: 12:00
+            priority: high
             created_at: 2023-09-30 10:00
             completed: False
         """
-        if attribute not in ["title", "due_date", "due_time"]:
-            raise ValueError("attribute must be one of ['title', 'due_date', 'due_time']")
+        if attribute not in ["title", "due_date", "due_time", "priority"]:      # Checks if the attribute is valid
+            raise ValueError("attribute must be one of ['title', 'due_date', 'due_time', 'priority']")
         if attribute == "title" and not isinstance(new_value, str):
             raise TypeError(f"title must be of str type")
         
-        if attribute == "due_date":
-            new_value = datetime.strptime(new_value, "%Y-%m-%d").date()
+        if attribute == "due_date":     # Checks if the new value is in the correct format for due_date
+            try:
+                new_value = datetime.strptime(new_value, "%Y-%m-%d").date()
+            except Exception:
+                raise ValueError("due_date must be in YYYY-MM-DD format.")
+            
         elif attribute == "due_time":
-            new_value = datetime.strptime(new_value, "%H:%M").time()
+            try:
+                new_value = datetime.strptime(new_value, "%H:%M").time()
+            except Exception:
+                raise ValueError("due_time must be in 24 hr format (HH:MM).")
 
         self.tasklist[id-1][attribute] = new_value
         task = self.tasklist[id-1]

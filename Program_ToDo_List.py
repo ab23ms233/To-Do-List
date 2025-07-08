@@ -1,5 +1,7 @@
 from Class_ToDo_List import ToDo_List
 import pandas as pd
+import csv
+import os
 
 def main():
     invalid_text = "WRONG input. Enter again"
@@ -10,27 +12,44 @@ def main():
     print("Choose")
     print("1. If you want to import tasks from a file")
     print("2. If you want to create a new tasklist")
-    file_choice = int(input())
-    print()
 
-    if file_choice == 1:
-        file = input("Enter the name of the file: ")
-        df = pd.read_csv(file)
+    while True:
+        file_choice = int(input())
+        print()
 
-        if df.empty:
-            print("The file is empty. Initialising empty tasklist... ")
+        if file_choice == 1:
+            file = input("Enter the name of the file: ")
+            print()
+
+            if os.path.exists(file):
+                if os.path.getsize(file) == 0:
+                    print("The file is empty. Initialising empty tasklist... ")
+                    todo = ToDo_List()
+
+                else:
+                    f = open(file, mode="r", newline="")
+                    reader = csv.reader(f)
+                    tasklist, task = [], {}
+                    next(reader)
+
+                    for row in reader:
+                        for (attr, element) in zip(ToDo_List.attributes, row):
+                            task[attr] = element
+                        tasklist.append(task)
+                        task = {}
+
+                    todo = ToDo_List(tasklist)
+                    f.close()
+                break
+
+            else:
+                print("No such file exists. Enter again")
+            
+        elif file_choice == 2:
             todo = ToDo_List()
+            break
         else:
-            df["completed"] = df["completed"].astype(bool)
-            df["due_date"] = pd.to_datetime(df["due_date"]).dt.date
-            df["due_time"] = df["due_time"].replace('NA', pd.NA)
-            df["due_time"] = pd.to_datetime(df["due_time"], format="%H:%M", errors='coerce').dt.time
-
-            tasklist = df.to_dict(orient="records")
-            todo = ToDo_List(tasklist)
-    
-    elif file_choice == 2:
-        todo = ToDo_List()
+            print(invalid_text)
 
     while True:
         print("Choose from one of the following options:")
@@ -93,6 +112,7 @@ def main():
 
                 while True:
                     modify = int(input())
+                    print()
 
                     if modify == 1:
                         attr = "title"
@@ -146,23 +166,36 @@ def main():
             print("3. Exit")
 
             while True:
-                next = int(input())
+                next_action = int(input())
                 print()
 
-                if next == 1:
+                if next_action == 1:
                     same_op = True
                     break
-                elif next == 2:
+                elif next_action == 2:
                     same_op = False
                     break
-                elif next == 3:
-                    if file_choice == 2:
-                        file = input("Enter the filename(csv) to which you want to save your tasks: ")
-                        print()
+                elif next_action == 3:
+                    file = input("Enter the filename(csv) to which you want to save your tasks: ")
+                    print()
 
-                        print("Recording Tasks... ")
-                        df = pd.DataFrame(todo.tasklist)
-                        df.to_csv(file, index=False)
+                    print("Recording Tasks... ")
+                    f = open(file, mode="w", newline="")
+                    writer = csv.writer(f)
+                    header = list(ToDo_List.attributes.keys())
+                    writer.writerow(header)
+                    tasklist, row = [], []
+
+                    for task in todo.tasklist:
+                        for attr in task:
+                            row.append(task[attr])
+                        tasklist.append(row)
+                        row = []
+                    
+                    writer.writerows(tasklist)
+                    f.close()
+                    print("Successfully recorded all tasks!")
+                    print()
 
                     print("Thanks for using the ToDo application. Have a nice day!")
                     print()
