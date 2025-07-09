@@ -1,5 +1,10 @@
-id,title,due_date,due_time,created_at,completed
-1,Read a book,7/8/2025,22:00:00,7/8/2025 12:22,TRUE
-3,Complete ToDo project,7/8/2025,21:00:00,7/8/2025 12:23,FALSE
-4,Wash Clothes,7/8/2025,17:00:00,7/8/2025 12:23,FALSE
-5,Check Papai's studies,7/8/2025,19:00:00,7/8/2025 12:24,FALSE
+id,title,due_date,due_time,priority,created_at,completed
+1,Read 20 pages of Manifest,2025-08-07,NA,moderate,2025-07-08 20:41:00,True
+2,Wash Clothes,2025-08-07,NA,high,2025-07-08 20:41:00,True
+3,Exercise,2025-08-07,NA,high,2025-07-08 20:42:00,True
+5,Complete ToDo List Project,2025-08-07,22:00:00,high,2025-07-08 20:43:00,False
+7,Go to bank for submitting cheque,2025-07-09,11:30:00,high,2025-09-07 10:59:00,False
+9,Read a book,2025-07-09,NA,moderate,2025-09-07 11:06:00,False
+11,Go to bazaar,2025-07-08,NA,high,2025-07-09 16:37:11,False
+12,Exercise,2025-07-09,19:00:00,high,2025-07-09 17:02:52,False
+13,Write diary,2025-07-09,23:00:00,moderate,2025-07-09 17:03:56,False
