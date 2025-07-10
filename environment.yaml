@@ -1,0 +1,7 @@
+name: task_manager_env
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - python-dateutil

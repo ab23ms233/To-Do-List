@@ -1,7 +1,5 @@
 from Class_ToDo_List import ToDo_List
 from datetime import date
-import csv
-import os
 
 def main():
     changed = False      # Flag to check if tasklist has been changed
@@ -23,38 +21,26 @@ def main():
             file = input("Enter the name of the file: ")
             print()
 
-            if os.path.exists(file):    # Checking if the file exists
-                if os.path.getsize(file) == 0:      # Checking if the file is empty
-                    print("The file is empty. Initialising empty tasklist... ")
-                    todo = ToDo_List()
+            print("Reading file... ")
 
-                else:       # If the file is not empty, read the tasks from the file
-                    print("Reading tasks from file... ")
-
-                    f = open(file, mode="r", newline="")
-                    reader = csv.reader(f)
-                    tasklist, task = [], {}
-                    next(reader)
-
-                    for row in reader:  # Constructing a list of dictionaries from the file - tasklist
-                        for (attr, element) in zip(ToDo_List.attributes, row):
-                            task[attr] = element
-                        tasklist.append(task)
-                        task = {}
-
-                    todo = ToDo_List(tasklist)
-                    print("Successfully read tasks from file!")
+            while True:
+                try:
+                    tasklist = ToDo_List.csv_to_tasks(file)
+                    break
+                except FileNotFoundError:
+                    print("File does not exist. Enter again")
+                    file = input("Enter the name of the file: ")
                     print()
 
-                    print("Your tasks are:")
-                    print()
-                    print(todo.display_tasks())
-                    print()
-                    f.close()
-                break
+            todo = ToDo_List(tasklist)
+            print("Successfully read tasks from file!")
+            print()
 
-            else:   # If the file does not exist, prompt the user to enter again
-                print("No such file exists. Enter again")
+            print("Your tasks are:")
+            print()
+            print(todo.display_tasks())
+            print()
+            break
             
         elif file_choice == 2:      # Creating a new tasklist
             todo = ToDo_List()
@@ -256,13 +242,13 @@ def main():
                 print()
                 return
 
+            else:       # Invalid Input
+                print(invalid_text)
+                break
+
             if choice in [1,2,3,4]:     # Printing task details for add, remove, modify, and complete operations
                 print(task_str)
                 changed = True      # tasklist has been updated so tasks have to be recorded to a file
-
-            else:
-                print(invalid_text)
-                break
 
 
             print("What's next on your mind?")

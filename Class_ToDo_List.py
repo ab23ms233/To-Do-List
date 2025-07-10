@@ -3,6 +3,7 @@ from dateutil.parser import parse
 from typing import Dict, List, Literal, Any, Union
 import pandas as pd
 import csv
+import os
 
 
 class ToDo_List:
@@ -38,6 +39,7 @@ class ToDo_List:
         - `sort_tasks(attribute: Union[Literal["priority", "created_at", "completed"], List], ascending: bool = False) -> pd.DataFrame`: Sorts the tasks in the tasklist based on a specified attribute.
         - `filter_tasks(attribute: Literal["due_date", "priority", "completed"], value, operator: str = "=") -> pd.DataFrame`: Filters tasks in the tasklist based on a specified attribute and value.
         - `tasks_to_csv(tasklist: List[Dict[str, Any]], filename: str) -> None`: Writes the tasklist to a CSV file.
+        - `csv_to_tasks(filename: str) -> List[Dict[str, Any]]`: Reads tasks from a CSV file and returns them as a list of dictionaries.
     
     **Example:**
         >>> todo = ToDo_List([
@@ -124,9 +126,6 @@ class ToDo_List:
                     except Exception:
                         raise TypeError(f"{attr} must be of type {ToDo_List.attributes[attr]}")
 
-                if task[attr] < date.today():       # Check if due_date is in the past
-                    raise ValueError("due_date cannot be in the past.")
-
             # Correction for due_time attribute
             elif attr == "due_time":        
                 if task[attr] == '':
@@ -136,9 +135,6 @@ class ToDo_List:
                         task[attr] = parse(task[attr]).time()
                     except Exception:
                         raise TypeError(f"{attr} must be of type {ToDo_List.attributes[attr]}")
-
-                    if task["due_date"] == date.today() and task[attr] < datetime.now().time():       # Check if due_date is in the past
-                        raise ValueError("due_time cannot be in the past.")
                     
             # Correction for priority attribute
             elif attr == "priority":      
@@ -280,6 +276,7 @@ class ToDo_List:
         **Raises:**
             - `TypeError`: If the task is not a dictionary or if any attribute is not of the expected type.
             - `ValueError`: If the task dictionary does not contain all required attributes.
+            - `ValueError`: If the due_date is in the past or if the due_time is in the past on the same day.
 
         **Example:**
             >>> task = {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high, "completed": False}
@@ -294,6 +291,12 @@ class ToDo_List:
             completed: False
         """
         task = self.correct_attributes(task)
+
+        if task["due_date"] < date.today():       # Check if due_date is in the past
+            raise ValueError("due_date cannot be in the past.")
+        if task["due_date"] == date.today() and (isinstance(task["due_time"], time) and task["due_time"] < datetime.now().time()):       # Check if due_time is in the past
+            raise ValueError("due_time cannot be in the past.")
+        
         self.ids.append(task["id"])
         self.tasklist.append(task)
 
@@ -324,6 +327,8 @@ class ToDo_List:
         **Raises:**
             - `TypeError`: If the new value is not appropriate for the attribute.
             - `ValueError`: If the specified attribute is not valid.
+            - `ValueError`: If the task ID is not present in the tasklist.
+            - `ValueError`: If the due_date is in the past or if the due_time is in the past on the same day.
 
         **Example:**
             >>> todo = ToDo_List([
@@ -594,3 +599,52 @@ class ToDo_List:
 
         writer.writerows(task_list)
         f.close()
+
+    @staticmethod
+    def csv_to_tasks(filename: str) -> List[Dict[str, Any]]:
+        """
+        Reads tasks from a CSV file and returns them as a list of dictionaries.
+
+        **Parameters:**
+            `filename` (str): The name of the CSV file to read tasks from.
+
+        **Returns:**
+            `List[Dict[str, Any]]`: A list of tasks, where each task is a dictionary containing task attributes.
+        
+        **Raises:**
+            - `FileNotFoundError`: If the specified file does not exist.
+            - `TypeError`: If the filename is not a string.
+            - `ValueError`: If the attributes in the file do not match the expected attributes.
+        """
+        if not isinstance(filename, str):
+            raise TypeError("filename must be a string")
+
+        if os.path.exists(filename):    # Checking if the file exists
+
+            if os.path.getsize(filename) == 0:      # Checking if the file is empty
+                print("The file is empty. Initialising empty tasklist... ")
+                tasklist = []
+
+            else:       # If the file is not empty, read the tasks from the file
+                f = open(filename, mode="r", newline="")
+                reader = csv.reader(f)
+                tasklist, task = [], {}
+
+                reader = list(reader)
+                header = reader[0]
+
+                if header != list(ToDo_List.attributes.keys()):      # Checking if the header matches the attributes
+                    raise ValueError(f"Attributes in the file do not match the expected attributes: {list(ToDo_List.attributes.keys())}")
+
+                for row in reader[1:]:  # Constructing a list of dictionaries from the file - tasklist
+                    for (attr, element) in zip(ToDo_List.attributes, row):
+                        task[attr] = element
+                    tasklist.append(task)
+                    task = {}
+            
+            f.close()
+            return tasklist
+        
+        else:
+            raise FileNotFoundError(f"{filename} does not exist. Please check the file path.")
+                
