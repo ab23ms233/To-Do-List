@@ -4,44 +4,50 @@ from typing import Dict, List, Literal, Any, Union
 import pandas as pd
 import csv
 import os
+from colorama import Fore, init
 
 
 class ToDo_List:
     """
     A class representing a To-Do List, allowing for the management of tasks with attributes such as title, due date, due time, priority, creation time, and completion status.
 
-    **Class Attributes:**
-        - `attributes` (Dict[str, type]): A dictionary defining the expected types for each task attribute.
-        - `input_attributes` (List[str]): A list of attributes that can be input by the user when adding a new task.
-        - `priority_values` (List[str]): A list of valid priority values for tasks.
+    Class Attributes
+    ----------------------
+        attributes (Dict[str, type]): A dictionary defining the expected types for each task attribute.
+        input_attributes (List[str]): A list of attributes that can be input by the user when adding a new task.
+        priority_values (List[str]): A list of valid priority values for tasks.
 
-    **Instance Attributes:**
-        - `tasklist` (List[Dict[str, Any]]): A list of tasks, where each task is represented as a dictionary.
-        - `ids` (List[int]): A list of task IDs.
+    Instance Attributes
+    -----------------------
+        tasklist (List[Dict[str, Any]]): A list of tasks, where each task is represented as a dictionary.
+        ids (List[int]): A list of task IDs.
     
-    **Task Attributes:**
-        - `id` (int): Unique identifier for the task.
-        - `title` (str): Title of the task.
-        - `due_date` (date): Due date of the task in YYYY-MM-DD format.
-        - `due_time` (time): Due time of the task in 24 hr format (HH:MM). 'NA' if no time is set.
-        - `priority` (str): Priority of the task. Must be one of (high, moderate, low).
-        - `created_at` (datetime): Creation time of the task.
-        - `completed` (bool): Indicates whether the task is completed or not.
+    Task Attributes
+    ------------------------
+        id (int): Unique identifier for the task.
+        title (str): Title of the task.
+        due_date (date): Due date of the task in YYYY-MM-DD format.
+        due_time (time): Due time of the task in 24 hr format (HH:MM). 'NA' if no time is set.
+        priority (str): Priority of the task. Must be one of (high, moderate, low).
+        created_at (datetime): Creation time of the task.
+        completed (bool): Indicates whether the task is completed or not.
     
-    **Methods:**
-        - `correct_attributes(task: Dict[str, Any]) -> Dict[str, Any]`: Validates and corrects the attributes of a task.
-        - `input_task() -> Dict[str, Any]`: Prompts the user to input details for a new task.
-        - `add_task(task: Dict[str, Any]) -> str`: Adds a new task to the tasklist.
-        - `display_tasks() -> pd.DataFrame`: Displays the current tasklist as a pandas DataFrame.
-        - `modify_task(id: int, attribute: Literal["title", "due_date", "due_time", "priority"], new_value) -> str`: Modifies an existing task in the tasklist.
-        - `complete_task(id: int) -> str`: Marks a task as completed.
-        - `remove_task(id: int) -> str`: Removes a task from the tasklist by its ID.
-        - `sort_tasks(attribute: Union[Literal["priority", "created_at", "completed"], List], ascending: bool = False) -> pd.DataFrame`: Sorts the tasks in the tasklist based on a specified attribute.
-        - `filter_tasks(attribute: Literal["due_date", "priority", "completed"], value, operator: str = "=") -> pd.DataFrame`: Filters tasks in the tasklist based on a specified attribute and value.
-        - `tasks_to_csv(tasklist: List[Dict[str, Any]], filename: str) -> None`: Writes the tasklist to a CSV file.
-        - `csv_to_tasks(filename: str) -> List[Dict[str, Any]]`: Reads tasks from a CSV file and returns them as a list of dictionaries.
+    Methods
+    ---------------------------
+        - `correct_attributes`: Validates and corrects the attributes of a task.
+        - `input_task`: Prompts the user to input details for a new task.
+        - `add_task`: Adds a new task to the tasklist.
+        - `display_tasks`: Displays the current tasklist as a pandas DataFrame.
+        - `modify_task`: Modifies an existing task in the tasklist.
+        - `complete_task`: Marks a task as completed.
+        - `remove_task`: Removes a task from the tasklist by its ID.
+        - `sort_tasks`: Sorts the tasks in the tasklist based on a specified attribute.
+        - `filter_tasks`: Filters tasks in the tasklist based on a specified attribute and value.
+        - `tasks_to_csv`: Writes the tasklist to a CSV file.
+        - `csv_to_tasks`: Reads tasks from a CSV file and returns them as a list of dictionaries.
     
-    **Example:**
+    Example
+    ----------------------------
         >>> todo = ToDo_List([
         ...     {"id": 1, "title": "Sample Task", "due_date": "2023-10-01",
         ...      "due_time": "12:00", "priority": "high", "created_at": "2023-09-30 10:00", "completed": False}
@@ -55,6 +61,8 @@ class ToDo_List:
         created_at: 2023-09-30 10:00
         completed: False
     """
+    init(autoreset=True)  # Initialize colorama for colored output
+
     # Class attributes defining the expected types and values for task attributes
     attributes = {"id": int, 
                   "title": str, 
@@ -64,26 +72,26 @@ class ToDo_List:
                   "created_at": datetime, 
                   "completed": bool}
     
-    input_attributes = ["title", "due_date", "due_time", "priority", "completed"]
-    priority_values = ["high", "moderate", "low"]
+    input_attributes: list[str] = ["title", "due_date", "due_time", "priority", "completed"]
+    priority_values: list[str] = ["high", "moderate", "low"]
 
     def correct_attributes(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
         Checks if the task dictionary contains all required attributes and validates their types.
 
-        **Parameters**:
-            `task` (Dict[str, Any]): A dictionary representing a task with attributes like id, title, due_date, due_time, priority, created_at, and completed.
+        Parameters:
+            task (Dict[str, Any]): A dictionary representing a task with attributes like id, title, due_date, due_time, priority, created_at, and completed.
         
-        **Returns:**
-            `Dict[str, Any]`: The corrected task dictionary with all attributes validated and corrected if necessary.
+        Returns:
+            dict: The corrected task dictionary with all attributes validated and corrected if necessary.
         
-        **Raises:**
-            - `TypeError`: If the task is not a dictionary or if any attribute is not of the expected type.
-            - `ValueError`: If the task dictionary does not contain all required attributes or contains unexpected keys.
+        Raises:
+            TypeError: If the task is not a dictionary or if any attribute is not of the expected type.
+            ValueError: If the task dictionary does not contain all required attributes or contains unexpected keys.
         """        
         # Check if the task dictionary contains all required attributes
         if not set(task.keys()).issubset(ToDo_List.attributes.keys()):
-            raise ValueError(f"Task dictionary must only contain the following keys: {list(ToDo_List.attributes.keys())}")
+            raise ValueError(Fore.RED + f"Task dictionary must only contain the following keys: {list(ToDo_List.attributes.keys())}")
         
         for attr in ToDo_List.attributes:
             
@@ -94,10 +102,10 @@ class ToDo_List:
                         try:
                             task[attr] = int(task[attr])    # Try converting to int
                         except Exception:
-                            raise TypeError(f"{attr} must be of type {ToDo_List.attributes[attr]}")   
+                            raise TypeError(Fore.RED + f"{attr} must be of type {ToDo_List.attributes[attr]}")   
                     
                     if task[attr] in self.ids:      # Check if id is unique
-                        raise ValueError(f"task with id {task[attr]} is already present")
+                        raise ValueError(Fore.RED + f"task with id {task[attr]} is already present")
                     
                 else:       # Generates the id automatically if not present
                     new_id = (max(self.ids) if self.ids else 0) + 1
@@ -105,7 +113,7 @@ class ToDo_List:
                     
             # Correction for title attribute
             elif attr == "title" and not isinstance(task[attr], str):      # Checks if title is a string
-                raise TypeError(f"{attr} must be of type {ToDo_List.attributes[attr]}")
+                raise TypeError(Fore.RED + f"{attr} must be of type {ToDo_List.attributes[attr]}")
             
             # Correction for created_at attribute
             elif attr == "created_at":      
@@ -116,7 +124,7 @@ class ToDo_List:
                     try:
                         task[attr] = parse(task[attr])
                     except Exception:
-                        raise TypeError(f"{attr} must be of type {ToDo_List.attributes[attr]}")
+                        raise TypeError(Fore.RED + f"{attr} must be of type {ToDo_List.attributes[attr]}")
 
             # Correction for due_date attribute
             elif attr == "due_date" :       
@@ -124,7 +132,7 @@ class ToDo_List:
                     try:
                         task[attr] = parse(task[attr]).date()
                     except Exception:
-                        raise TypeError(f"{attr} must be of type {ToDo_List.attributes[attr]}")
+                        raise TypeError(Fore.RED + f"{attr} must be of type {ToDo_List.attributes[attr]}")
 
             # Correction for due_time attribute
             elif attr == "due_time":        
@@ -134,7 +142,7 @@ class ToDo_List:
                     try:
                         task[attr] = parse(task[attr]).time()
                     except Exception:
-                        raise TypeError(f"{attr} must be of type {ToDo_List.attributes[attr]}")
+                        raise TypeError(Fore.RED + f"{attr} must be of type {ToDo_List.attributes[attr]}")
                     
             # Correction for priority attribute
             elif attr == "priority":      
@@ -143,7 +151,7 @@ class ToDo_List:
                 
                 task[attr] = task[attr].lower()
                 if task[attr] not in ToDo_List.priority_values:     # Checks if priority is one of the valid values
-                    raise ValueError(f"{attr} must be one of {ToDo_List.priority_values}")
+                    raise ValueError(Fore.RED + f"{attr} must be one of {ToDo_List.priority_values}")
                 
             # Correction for completed attribute
             elif attr == "completed" and not isinstance(task[attr], bool):      
@@ -152,11 +160,11 @@ class ToDo_List:
                 elif isinstance(task[attr], str) and task[attr].lower() == "false":
                     task[attr] = False
                 else:
-                    raise TypeError(f"{attr} must be of type {ToDo_List.attributes[attr]}")
+                    raise TypeError(Fore.RED + f"{attr} must be of type {ToDo_List.attributes[attr]}")
 
             # Check if the attribute is of the expected type
             elif not isinstance(task[attr], ToDo_List.attributes[attr]):
-                raise TypeError(f"{attr} must be of type {ToDo_List.attributes[attr]}")
+                raise TypeError(Fore.RED + f"{attr} must be of type {ToDo_List.attributes[attr]}")
             
         return task
 
@@ -164,37 +172,40 @@ class ToDo_List:
         """
         Initializes a ToDo_List instance with an optional list of tasks.
 
-        **Parameters:**
-            - `tasklist` (List[Dict[str, Any]], optional):  
-              A list of tasks, where each task is a dictionary containing task attributes.  
-              If no tasklist is provided, it initializes with an empty list.
+        Parameters:
+            tasklist (List[Dict[str, Any]], optional):  A list of tasks, where each task is a dictionary containing task attributes.  
+                If no tasklist is provided, it initializes with an empty list.
 
-        *Each task dictionary should contain the following keys:*
-            - `title` (str): Title of the task.  
-            - `due_date` (str): Due date of the task in YYYY-MM-DD format.  
-            - `due_time` (str): Due time of the task in 24 hr format (HH:MM). 'NA' if no time is set. 
-            - `priority` (str): Priority of the task. Must be one of (high, moderate, low).
-            - `completed` (bool): Indicates whether the task is completed or not.
+                *Each task dictionary should contain the following keys:*
+                    - `title` (str): Title of the task.  
+                    - `due_date` (str): Due date of the task in YYYY-MM-DD format.  
+                    - `due_time` (str): Due time of the task in 24 hr format (HH:MM). 'NA' if no time is set. 
+                    - `priority` (str): Priority of the task. Must be one of (high, moderate, low).
+                    - `completed` (bool): Indicates whether the task is completed or not.
 
-        **Attributes:**
-            - `tasklist` (List[Dict[str, Any]]): The list of tasks, where each task is represented as a dictionary.
-            - `ids` (List[int]): A list of task IDs.
+        Attributes
+        --------------------
+            tasklist (List[Dict[str, Any]]): The list of tasks, where each task is represented as a dictionary.
+            ids (List[int]): A list of task IDs.
+        
+        Returns:
+            None
 
-        **Raises:**
-            `TypeError`: If the tasklist is not a list or contains items that are not dictionaries.
+        Raises:
+            TypeError: If the tasklist is not a list or contains items that are not dictionaries.
 
-        **Example:**
+        Example:
             >>> todo = ToDo_List([
             ...     {"id": 1, "title": "Sample Task", "due_date": "2023-10-01",
             ...      "due_time": "12:00", "priority": "high", "created_at": "2023-09-30 10:00", "completed": False}
             ... ])
         """
         if not isinstance(tasklist, list):
-            raise TypeError("tasklist must be a list.")
+            raise TypeError(Fore.RED + "tasklist must be a list.")
         if not all(isinstance(task, dict) for task in tasklist):
-            raise TypeError("tasks must be dictionaries")
+            raise TypeError(Fore.RED + "tasks must be dictionaries")
         
-        self.ids = []
+        self.ids: list[int] = []
 
         # Checks if all attributes are of the correct type and if all required attributes are present
         for task in tasklist:
@@ -208,13 +219,13 @@ class ToDo_List:
         """
         Converts a task dictionary to a formatted string representation.
 
-        **Parameters:**
-            `task` (Dict[str, Any]):  A dictionary representing a task with attributes like id, title, due_date, due_time, created_at, and completed.
+        Parameters:
+            task (Dict[str, Any]):  A dictionary representing a task with attributes like id, title, due_date, due_time, created_at, and completed.
         
-        **Returns:**
-            `str`:  A formatted string representation of the task, with each attribute on a new line.
+        Returns:
+            str:  A formatted string representation of the task, with each attribute on a new line.
         
-        **Example:**
+        Example:
             >>> task = {"id": 1, "title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high", "created_at": "2023-09-30 10:00", "completed": False}
             >>> print(ToDo_List.task_to_str(task))
             id: 1
@@ -237,8 +248,8 @@ class ToDo_List:
         """
         Asks the user to input details for a new task.
 
-        **Returns:**
-            `Dict[str, Any]`: A dictionary representing the new task with attributes like id, title, due_date, due_time, priority, created_at, and completed.
+        Returns:
+            dict: A dictionary representing the new task with attributes like id, title, due_date, due_time, priority, created_at, and completed.
         """
         title = input("Enter the task: ")
         duedate = input("Enter due date (in YYYY/MM/DD format): ")
@@ -260,25 +271,25 @@ class ToDo_List:
         """
         Adds a new task to the tasklist.
 
-        **Parameters:**
-            - `task` (Dict[str, Any]): A dictionary representing the task to be added. 
+        Parameters:
+            task (Dict[str, Any]): A dictionary representing the task to be added. 
         
-        *It should contain the following keys:*
-            - `title` (str): Title of the task.  
-            - `due_date` (str): Due date of the task in YYYY-MM-DD format.  
-            - `due_time` (str): Due time of the task in 24 hr format (HH:MM). 'NA' if no time is set. 
-            - `priority` (str): Priority of the task. Must be one of (high, moderate, low).
-            - `completed` (bool): Indicates whether the task is completed or not.
+                *It should contain the following keys:*
+                    - `title` (str): Title of the task.  
+                    - `due_date` (str): Due date of the task in YYYY-MM-DD format.  
+                    - `due_time` (str): Due time of the task in 24 hr format (HH:MM). 'NA' if no time is set. 
+                    - `priority` (str): Priority of the task. Must be one of (high, moderate, low).
+                    - `completed` (bool): Indicates whether the task is completed or not.
 
-        **Returns:**
-            `str`: A formatted string representation of the added task.
+        Returns:
+            str: A formatted string representation of the added task.
 
-        **Raises:**
-            - `TypeError`: If the task is not a dictionary or if any attribute is not of the expected type.
-            - `ValueError`: If the task dictionary does not contain all required attributes.
-            - `ValueError`: If the due_date is in the past or if the due_time is in the past on the same day.
+        Raises:
+            TypeError: If the task is not a dictionary or if any attribute is not of the expected type.
+            ValueError: If the task dictionary does not contain all required attributes.
+            ValueError: If the due_date is in the past or if the due_time is in the past on the same day.
 
-        **Example:**
+        Example:
             >>> task = {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high, "completed": False}
             >>> todo = ToDo_List()
             >>> print(todo.add_task(task))
@@ -293,44 +304,97 @@ class ToDo_List:
         task = self.correct_attributes(task)
 
         if task["due_date"] < date.today():       # Check if due_date is in the past
-            raise ValueError("due_date cannot be in the past.")
+            raise ValueError(Fore.RED + "due_date cannot be in the past.")
         if task["due_date"] == date.today() and (isinstance(task["due_time"], time) and task["due_time"] < datetime.now().time()):       # Check if due_time is in the past
-            raise ValueError("due_time cannot be in the past.")
+            raise ValueError(Fore.RED + "due_time cannot be in the past.")
         
         self.ids.append(task["id"])
         self.tasklist.append(task)
 
         return ToDo_List.task_to_str(task)
     
-    def display_tasks(self) -> pd.DataFrame:
+    def display_tasks(self, print_task: Union[Literal['completed', 'pending', 'overdue'], List[str]] = ['completed', 'pending', 'overdue']) -> pd.DataFrame:
         """
-        Displays the current tasklist as a pandas DataFrame.
+        Displays the current tasklist as a pandas DataFrame, showing overdue, pending, and completed tasks.
 
-        **Returns:**
-            `pd.DataFrame`: A DataFrame containing the current tasklist, with each task represented as a row.
+        Parameters:
+            print_task (bool, optional): If True, prints the tasklist to the console. Defaults to True.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the current tasklist, with each task represented as a row.
         """
-        tasklist = pd.DataFrame(self.tasklist, columns=list(ToDo_List.attributes))
+        if not (isinstance(print_task, str) or isinstance(print_task, list)):
+            raise TypeError(Fore.RED + "print_task must be either string or list of strings")
+        if isinstance(print_task, str) and print_task not in ['completed', 'pending', 'overdue']:
+            raise ValueError(Fore.RED + "print_task must be one of ['completed', 'pending', 'overdue']")
+        if isinstance(print_task, list) and not all(element in ['completed', 'pending', 'overdue'] for element in print_task):
+            raise ValueError(Fore.RED + "All list elements must be one of ['completed', 'pending', 'overdue']")
+        
+        tasklist = pd.DataFrame(self.tasklist, columns=list(ToDo_List.attributes.keys()))
+
+        if print_task:
+
+            if len(tasklist) == 0:
+                print("No tasks to display")
+                return tasklist
+            
+            tasklist["due_time"] = tasklist["due_time"].apply(lambda x: x if isinstance(x, time) else None)
+    
+            current_date = date.today()
+            current_time = datetime.now().time().replace(microsecond=0)
+
+            if 'overdue' in print_task:
+                overdue = tasklist[((tasklist["due_date"] < current_date)
+                                   | ((tasklist["due_date"] == current_date)
+                                      & (tasklist["due_time"].notna()) & (tasklist["due_time"] < current_time)))
+                                    & (tasklist["completed"] == False)]
+                
+                if len(overdue) != 0:
+                    print(Fore.LIGHTRED_EX + "Overdue Tasks")
+                    print(f"{Fore.LIGHTRED_EX}{overdue}")
+                    print()
+            
+            if 'pending' in print_task:
+                pending = tasklist[((tasklist["due_date"] > current_date)
+                                   | ((tasklist["due_date"] == current_date) 
+                                      & ((tasklist["due_time"].isna())
+                                         | (tasklist["due_time"] > current_time))))
+                                   & (tasklist["completed"] == False)]
+                
+                if len(pending) != 0:
+                    print(Fore.LIGHTCYAN_EX + "Pending Tasks")
+                    print(f"{Fore.LIGHTCYAN_EX}{pending}")
+                    print()
+            
+            if 'completed' in print_task:
+                completed = tasklist[tasklist["completed"] == True]
+
+                if len(completed) != 0:
+                    print(Fore.LIGHTGREEN_EX + "Completed Tasks")
+                    print(f"{Fore.LIGHTGREEN_EX}{completed}")
+                    print()
+
         return tasklist
 
     def modify_task(self, id: int, attribute: Literal["title", "due_date", "due_time", "priority"], new_value) -> str:
         """
         Modifies an existing task in the tasklist.
 
-        **Parameters:**
-            - `id` (int): The ID of the task to be modified.
-            - `attribute` (Literal["title", "due_date", "due_time", "priority"]): The attribute of the task to be modified.
-            - `new_value`: The new value for the specified attribute.
+        Parameters:
+            id (int): The ID of the task to be modified.
+            attribute (Literal["title", "due_date", "due_time", "priority"]): The attribute of the task to be modified.
+            new_value: The new value for the specified attribute.
         
-        **Returns:**
-            `str`: A formatted string representation of the modified task.
+        Returns:
+            str: A formatted string representation of the modified task.
         
-        **Raises:**
-            - `TypeError`: If the new value is not appropriate for the attribute.
-            - `ValueError`: If the specified attribute is not valid.
-            - `ValueError`: If the task ID is not present in the tasklist.
-            - `ValueError`: If the due_date is in the past or if the due_time is in the past on the same day.
+        Raises:
+            TypeError: If the new value is not appropriate for the attribute.
+            ValueError: If the specified attribute is not valid.
+            ValueError: If the task ID is not present in the tasklist.
+            ValueError: If the due_date is in the past or if the due_time is in the past on the same day.
 
-        **Example:**
+        Example:
             >>> todo = ToDo_List([
             ...     {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high", "completed": False}
             ... ])
@@ -348,10 +412,10 @@ class ToDo_List:
             try:
                 id = int(id)
             except Exception:
-                raise TypeError("id must be of type int")
+                raise TypeError(Fore.RED + "id must be of type int")
             
         if id not in self.ids:
-            raise ValueError(f"task with id {id} is not present") 
+            raise ValueError(Fore.RED + f"task with id {id} is not present") 
         
         for i in range(len(self.ids)):
             if id == self.tasklist[i]["id"]:
@@ -363,11 +427,11 @@ class ToDo_List:
         
         # Checks if the attribute is valid
         if attribute not in ["title", "due_date", "due_time", "priority"]:      
-            raise ValueError("attribute must be one of ['title', 'due_date', 'due_time', 'priority']")
+            raise ValueError(Fore.RED + "attribute must be one of ['title', 'due_date', 'due_time', 'priority']")
         
         # Check for title
         if attribute == "title" and not isinstance(new_value, str):
-            raise TypeError(f"title must be of str type")
+            raise TypeError(Fore.RED + f"title must be of str type")
         
         # Check for due_date
         if attribute == "due_date":     
@@ -375,10 +439,10 @@ class ToDo_List:
                 try:
                     new_value = parse(new_value).date()
                 except Exception:
-                    raise ValueError("due_date must be in YYYY-MM-DD format.")
+                    raise ValueError(Fore.RED + "due_date must be in YYYY-MM-DD format.")
             
             if new_value < date.today():     # Check if due_date is in the past
-                raise ValueError("due_date cannot be in the past.")
+                raise ValueError(Fore.RED + "due_date cannot be in the past.")
 
         # Check for due_time
         elif attribute == "due_time":   
@@ -389,14 +453,14 @@ class ToDo_List:
                     new_value = parse(new_value).time()
                     
                     if task["due_date"] == date.today() and new_value < datetime.now().time():       # Check if due_date is in the past
-                        raise ValueError("due_time cannot be in the past.")
+                        raise ValueError(Fore.RED + "due_time cannot be in the past.")
                     
                 except Exception:
-                    raise ValueError("due_time must be in 24 hr format (HH:MM).")
+                    raise ValueError(Fore.RED + "due_time must be in 24 hr format (HH:MM).")
         
         # Check for priority
         elif attribute == "priority" and new_value not in ToDo_List.priority_values:        # Checks if the new value is a valid priority
-            raise ValueError(f"priority must be one of {ToDo_List.priority_values}")
+            raise ValueError(Fore.RED + f"priority must be one of {ToDo_List.priority_values}")
 
         self.tasklist[index][attribute] = new_value
         task = self.tasklist[index]
@@ -407,16 +471,16 @@ class ToDo_List:
         """
         Checks off a task as completed in the tasklist.
 
-        **Parameters:**
-            `id` (int): The ID of the task to be marked as completed.
+        Parameters:
+            id (int): The ID of the task to be marked as completed.
         
-        **Returns:**
-            `str`: A formatted string representation of the completed task.
+        Returns:
+            str: A formatted string representation of the completed task.
         
-        **Raises:**
-            `ValueError`: If the task ID is not present.
+        Raises:
+            ValueError: If the task ID is not present.
 
-        **Example:**
+        Example:
             >>> todo = ToDo_List([
             ...     {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high", "completed": False}
             ... ])
@@ -430,13 +494,9 @@ class ToDo_List:
             completed: True
         """
         if id not in self.ids:
-            raise ValueError(f"task with id {id} is not present.")
+            raise ValueError(Fore.RED + f"task with id {id} is not present.")
         
-        for i in range(len(self.ids)):
-            if id == self.tasklist[i]["id"]:
-                index = i
-                break
-
+        index = self.ids.index(id)
         self.tasklist[index]["completed"] = True
         task = self.tasklist[index]
 
@@ -446,16 +506,16 @@ class ToDo_List:
         """
         Removes a task from the tasklist by its ID.
 
-        **Parameters:**
-            `id` (int): The ID of the task to be removed.
+        Parameters:
+            id (int): The ID of the task to be removed.
         
-        **Returns:**
-            `str`: A formatted string representation of the removed task.
+        Returns:
+            str: A formatted string representation of the removed task.
         
-        **Raises:**
-            `ValueError`: If the task ID is not present.
+        Raises:
+            ValueError: If the task ID is not present.
         
-        **Example:**
+        Example:
             >>> todo = ToDo_List([
             ...     {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high", "completed": False}
             ... ])
@@ -469,13 +529,9 @@ class ToDo_List:
             completed: False
         """
         if id not in self.ids:
-            raise ValueError(f"task with id {id} is not present.")
+            raise ValueError(Fore.RED + f"task with id {id} is not present.")
         
-        for i in range(len(self.ids)):
-            if id == self.tasklist[i]["id"]:
-                index = i
-                break
-
+        index = self.ids.index(id)
         task = self.tasklist.pop(index)
         self.ids.remove(id)
 
@@ -485,18 +541,18 @@ class ToDo_List:
         """
         Sorts the tasks in the tasklist based on a specified attribute.
 
-        **Parameters:**
-            - `attribute` (Union[Literal["priority", "created_at", "completed"], List]): The attribute to sort by.
-              It can be one of "priority", "created_at", "completed", or a list containing ["due_date", "due_time"].
-            - `ascending` (bool, optional): Whether to sort in ascending order. Defaults to False.
+        Parameters:
+            attribute (Union[Literal["priority", "created_at", "completed"], List]): The attribute to sort by.
+                It can be one of "priority", "created_at", "completed", or a list containing ["due_date", "due_time"].
+            ascending (bool, optional): Whether to sort in ascending order. Defaults to False.
         
-        **Returns:**
-            `pd.DataFrame`: A DataFrame containing the sorted tasklist.
+        Returns:
+            pd.DataFrame: A DataFrame containing the sorted tasklist.
         
-        **Raises:**
-            `ValueError`: If the attribute is not valid.
+        Raises:
+            ValueError: If the attribute is not valid.
         
-        **Example:**
+        Example:
             >>> todo = ToDo_List([
             ...     {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high", "completed": False}
             ... ])
@@ -505,7 +561,7 @@ class ToDo_List:
         """
 
         if attribute not in [["due_date", "due_time"], "priority", "created_at", "completed"]:
-            raise ValueError("attribute must be a value from [['due_date', 'due_time'], 'priority', 'created_at', 'completed']")
+            raise ValueError(Fore.RED + "attribute must be a value from [['due_date', 'due_time'], 'priority', 'created_at', 'completed']")
         
         tasklist = pd.DataFrame(self.tasklist, columns=list(ToDo_List.attributes.keys()))
         tasklist["priority"] = pd.Categorical(tasklist["priority"], categories=ToDo_List.priority_values, ordered=True)     # Converts priority to a categorical type for sorting
@@ -517,21 +573,20 @@ class ToDo_List:
         """
         Filters tasks in the tasklist based on a specified attribute and value.
 
-        **Parameters:**
-            - `attribute` (Literal["due_date", "priority", "completed"]): The attribute to filter by.
-            - `value`: The value to filter the tasks by.
-            - `operator` (str, optional): The operator to use for filtering. Defaults to "=".
+        Parameters:
+            attribute (Literal["due_date", "priority", "completed"]): The attribute to filter by.
+            value: The value to filter the tasks by.
+            operator (str, optional): The operator to use for filtering. Defaults to "=".
+                *Note: `operator` is used only for filtering tasks whose due_date has passed in this version. However, it can be used for other tasks upon modification.*
         
-        **`Note:`** `operator` is used only for filtering pending tasks in this version. However, it can be used for other tasks upon modification.
+        Returns:
+            pd.DataFrame: A DataFrame containing the filtered tasks.
         
-        **Returns:**
-            `pd.DataFrame`: A DataFrame containing the filtered tasks.
+        Raises:
+            ValueError: If the attribute is not valid or if the value is not appropriate for the attribute.
+            TypeError: If the value is not of the expected type for the attribute.
         
-        **Raises:**
-            - `ValueError`: If the attribute is not valid or if the value is not appropriate for the attribute.
-            - `TypeError`: If the value is not of the expected type for the attribute.
-        
-        **Example:**
+        Example:
             >>> todo = ToDo_List([
             ...     {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high", "completed": False}
             ... ])
@@ -539,32 +594,32 @@ class ToDo_List:
             >>> print(filtered_tasks)
         """
         if operator not in ["=", ">", "<", ">=", "<=", "!="]:
-            raise ValueError("operator must be one of ['=', '>', '<', '>=', '<=', '!=']")
+            raise ValueError(Fore.RED + "operator must be one of ['=', '>', '<', '>=', '<=', '!=']")
         
         if attribute not in ["due_date", "priority", "completed"]:
-            raise ValueError("attribute must be a value from ['due_date', 'priority', 'completed']")
+            raise ValueError(Fore.RED + "attribute must be a value from ['due_date', 'priority', 'completed']")
         
         if attribute == "priority" and value not in ToDo_List.priority_values:
-            raise ValueError(f"{attribute} can only have values {ToDo_List.priority_values}")
+            raise ValueError(Fore.RED + f"{attribute} can only have values {ToDo_List.priority_values}")
         
         if attribute == "completed" and value not in [True, False]:
-            raise ValueError(f"{attribute} can only have values [True, False]")
+            raise ValueError(Fore.RED + f"{attribute} can only have values [True, False]")
         
         if attribute == "due_date":
             if isinstance(value, str):     # Checks if the value is in the correct format for due_date
                 try:
                     value = datetime.strptime(value, "%Y-%m-%d").date()
                 except Exception:
-                    raise ValueError("due_date must be in YYYY-MM-DD format.")
+                    raise ValueError(Fore.RED + "due_date must be in YYYY-MM-DD format.")
             elif not isinstance(value, date):
-                raise TypeError(f"{attribute} must be of type {date}") 
+                raise TypeError(Fore.RED + f"{attribute} must be of type date") 
         
 
         tasklist = pd.DataFrame(self.tasklist, columns=list(ToDo_List.attributes.keys()))
 
         if operator == "=":  # Filters the tasklist based on the attribute and value
             tasklist = tasklist[tasklist[attribute] == value]
-        elif operator == "<":   # For checking tasks whose due_date has passed (pending tasks)
+        elif operator == "<":   # For checking tasks whose due_date has passed
             tasklist = tasklist[tasklist[attribute] < value]
 
         return tasklist
@@ -574,15 +629,18 @@ class ToDo_List:
         """
         Writes the tasklist to a CSV file.
 
-        **Parameters:**
-            - `tasklist` (List[Dict[str, Any]]): A list of tasks, where each task is a dictionary containing task attributes.
-            - `filename` (str): The name of the CSV file to write the tasks to.
+        Parameters:
+            tasklist (List[Dict[str, Any]]): A list of tasks, where each task is a dictionary containing task attributes.
+            filename (str): The name of the CSV file to write the tasks to.
         
-        **Raises:**
-            `TypeError`: If the filename is not a string.
+        Returns:
+            None
+        
+        Raises:
+            TypeError: If the filename is not a string.
         """
         if not isinstance(filename, str):
-            raise TypeError("filename must be a string")
+            raise TypeError(Fore.RED + "filename must be a string")
         
         f = open(filename, mode="w", newline="")
 
@@ -605,19 +663,19 @@ class ToDo_List:
         """
         Reads tasks from a CSV file and returns them as a list of dictionaries.
 
-        **Parameters:**
-            `filename` (str): The name of the CSV file to read tasks from.
+        Parameters:
+            filename (str): The name of the CSV file to read tasks from.
 
-        **Returns:**
-            `List[Dict[str, Any]]`: A list of tasks, where each task is a dictionary containing task attributes.
+        Returns:
+            list: A list of tasks, where each task is a dictionary containing task attributes.
         
-        **Raises:**
-            - `FileNotFoundError`: If the specified file does not exist.
-            - `TypeError`: If the filename is not a string.
-            - `ValueError`: If the attributes in the file do not match the expected attributes.
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            TypeError: If the filename is not a string.
+            ValueError: If the attributes in the file do not match the expected attributes.
         """
         if not isinstance(filename, str):
-            raise TypeError("filename must be a string")
+            raise TypeError(Fore.RED + "filename must be a string")
 
         if os.path.exists(filename):    # Checking if the file exists
 
@@ -634,7 +692,7 @@ class ToDo_List:
                 header = reader[0]
 
                 if header != list(ToDo_List.attributes.keys()):      # Checking if the header matches the attributes
-                    raise ValueError(f"Attributes in the file do not match the expected attributes: {list(ToDo_List.attributes.keys())}")
+                    raise ValueError(Fore.RED + f"Attributes in the file do not match the expected attributes: {list(ToDo_List.attributes.keys())}")
 
                 for row in reader[1:]:  # Constructing a list of dictionaries from the file - tasklist
                     for (attr, element) in zip(ToDo_List.attributes, row):
@@ -646,5 +704,5 @@ class ToDo_List:
             return tasklist
         
         else:
-            raise FileNotFoundError(f"{filename} does not exist. Please check the file path.")
+            raise FileNotFoundError(Fore.RED + f"{filename} does not exist. Please check the file path.")
                 

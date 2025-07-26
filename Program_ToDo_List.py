@@ -1,12 +1,14 @@
 from Class_ToDo_List import ToDo_List
 from datetime import date
+from colorama import Fore, init
 
 def main():
+    init(autoreset=True)  # Initialize colorama to reset colors after each print
     changed = False      # Flag to check if tasklist has been changed
-    invalid_text = "WRONG input. Enter again"
+    invalid_text = Fore.RED + "WRONG input. Enter again"
     print()
 
-    print("Welcome to the ToDo List application")
+    print(Fore.YELLOW + "Welcome to the ToDo List application")
     print()
     print("Choose")
     print("1. If you want to import tasks from a file")
@@ -14,37 +16,50 @@ def main():
 
     # OPENING FILE TO IMPORT TASKS OR CREATING A NEW TASKLIST
     while True:
-        file_choice = int(input())
+        file_choice = input().strip()
         print()
 
-        if file_choice == 1:    # Importing tasks from a file
+        # Checking if file_choice is an integer
+        while True:
+            try:
+                file_choice = int(file_choice)
+                break
+            except Exception:
+                print(invalid_text)
+                file_choice = input().strip()
+        
+        # Importing tasks from a file
+        if file_choice == 1:    
             file = input("Enter the name of the file: ")
+            # file = "tasks.csv"
             print()
 
-            print("Reading file... ")
-
             while True:
-                try:
+                try:        # If file exists, open it
                     tasklist = ToDo_List.csv_to_tasks(file)
                     break
-                except FileNotFoundError:
-                    print("File does not exist. Enter again")
+                except FileNotFoundError:   # If file does not exist, ask for a new file
+                    print(Fore.RED + "File does not exist. Enter again")
                     file = input("Enter the name of the file: ")
                     print()
 
-            todo = ToDo_List(tasklist)
-            print("Successfully read tasks from file!")
+            print(Fore.CYAN + "Reading file... ")
+            todo = ToDo_List(tasklist)      # Create a ToDo_List object with the tasks read from the file
+            print(Fore.GREEN + "Successfully read tasks from file!")
             print()
 
+            # Display the tasks read from the file
             print("Your tasks are:")
             print()
-            print(todo.display_tasks())
+            todo.display_tasks()
             print()
             break
-            
-        elif file_choice == 2:      # Creating a new tasklist
+        
+        # Creating a new tasklist
+        elif file_choice == 2:      
             todo = ToDo_List()
             break
+
         else:       # Invalid choice
             print(invalid_text)
 
@@ -60,18 +75,28 @@ def main():
         print("5. View tasks")
         print("6. Exit")
         print()
-        choice = int(input("Enter your choice: "))
+        choice = input("Enter your choice: ").strip()
+        print()
+
+        # Checking if choice is an integer
+        while True:
+            try:
+                choice = int(choice)
+                break
+            except Exception:
+                print(invalid_text)
+                choice = input("Enter your choice: ").strip()
 
         while True:
             if choice == 1:     # Adding a task
-                print("You choose to add a task")
+                print(Fore.CYAN + "You choose to add a task")
                 print()
 
                 task = todo.input_task()
                 print()
 
                 task_str = todo.add_task(task)
-                print("Task Added! Details are:")
+                print(Fore.GREEN + "Task Added! Details are:")
 
             elif choice == 2:      # Removing a task
                 if not todo.tasklist:   # If there are no tasks to remove
@@ -79,32 +104,45 @@ def main():
                     print()
                     continue
 
-                print("You choose to remove a task")
-                print()
+                print(Fore.CYAN + "You choose to remove a task")
 
-                print(todo.display_tasks())
+                # Displaying the tasks to remove
+                print("Your tasks are:")
+                print()
+                todo.display_tasks()
                 print()
 
                 id = int(input("Enter the id of the task you want to remove: "))
                 print()
 
-                task_str = todo.remove_task(id)
-                print("Task Removed! Details are:")
-
+                # If task id is not valid
+                try:
+                    task_str = todo.remove_task(id)
+                    print(Fore.GREEN + "Task Removed! Details are:")
+                except Exception as e:
+                    print(e)
+                    task_str = "No task removed"
+                
             elif choice == 3:       # Modifying a task
                 if not todo.tasklist:   # If there are no tasks to modify
                     print("No tasks to modify")
                     print()
                     continue
 
-                print("You choose to modify a task")
-                print()
+                print(Fore.CYAN + "You choose to modify a task")
 
-                print(todo.display_tasks())
+                # Displaying the tasks to modify
+                print("Your tasks are:")
+                print()
+                todo.display_tasks()
                 print()
 
                 id = int(input("Enter the id of the task you want to modify: "))
                 print()
+
+                if id not in todo.ids:
+                    print(Fore.RED + f"id {id} not present")
+                    break
 
                 print("What do you want to modify?")
                 print("1. title")
@@ -132,7 +170,7 @@ def main():
 
                 task_str = todo.modify_task(id, attr, new)
                 print()
-                print("Task Modified! Details are:")
+                print(Fore.GREEN + "Task Modified! Details are:")
 
             elif choice == 4:       # Checking off a task
                 if not todo.tasklist:   # If there are no tasks to check off
@@ -140,17 +178,19 @@ def main():
                     print()
                     continue
 
-                print("You choose to tick off a task")
-                print()
+                print(Fore.CYAN + "You choose to tick off a task")
 
-                print(todo.display_tasks())
+                # Displaying the tasks to modify
+                print("Your tasks are:")
+                print()
+                todo.display_tasks(print_task=['overdue', 'pending'])
                 print()
 
                 id = int(input("Enter the id of the task you want to check off: "))
                 print()
 
                 task_str = todo.complete_task(id)
-                print("Congratulations on finishing your task. Details are:")
+                print(Fore.GREEN + "Congratulations on finishing your task. Details are:")
 
             elif choice == 5:       # Viewing tasks
                 print()
@@ -164,21 +204,30 @@ def main():
                 print("6. Sort by created_at (newest -> oldest)")
                 print("7. Sort by created_at (oldest -> newest)")
                 print()
-                print("8. Filter completed tasks")
-                print("9. Filter not completed tasks")
-                print("10. Filter high priority tasks")
-                print("11. Filter moderate priority tasks")
-                print("12. Filter low priority tasks")
-                print("13. Filter tasks to be completed by today")
-                print("14. Filter pending tasks (due_date has crossed)")
+                print("8. Filter overdue tasks (due_date has crossed)")
+                print("9. Filter pending tasks")
+                print("10. Filter completed tasks")
+                print("11. Filter high priority tasks")
+                print("12. Filter moderate priority tasks")
+                print("13. Filter low priority tasks")
+                print("14. Filter tasks to be completed by today")
                 print()
                 print("15. Just show me the tasks!")
                 print()
                 i = 1
 
                 while i == 1:
-                    view_choice = int(input("Enter your choice: "))
+                    view_choice = input("Enter your choice: ").strip()
                     print()
+
+                    # Checking if view_choice is an integer
+                    while True:
+                        try:
+                            view_choice = int(view_choice)
+                            break
+                        except Exception:
+                            print(invalid_text)
+                            view_choice = input("Enter your choice: ").strip()
 
                     # Sort Takss based on user choice
                     if view_choice == 1:
@@ -198,47 +247,62 @@ def main():
 
                     # Filter Tasks based on user choice
                     elif view_choice == 8:
-                        tasklist = todo.filter_tasks(attribute="completed", value=True)
+                        todo.display_tasks(print_task='overdue')
                     elif view_choice == 9:
-                        tasklist = todo.filter_tasks(attribute="completed", value=False)
+                        todo.display_tasks(print_task='pending')
                     elif view_choice == 10:
-                        tasklist = todo.filter_tasks(attribute="priority", value="high")
+                        todo.display_tasks(print_task='completed')
                     elif view_choice == 11:
-                        tasklist = todo.filter_tasks(attribute="priority", value="moderate")
+                        tasklist = todo.filter_tasks(attribute="priority", value="high")
                     elif view_choice == 12:
-                        tasklist = todo.filter_tasks(attribute="priority", value="low")
+                        tasklist = todo.filter_tasks(attribute="priority", value="moderate")
                     elif view_choice == 13:
-                        today = date.today()
-                        tasklist = todo.filter_tasks(attribute="due_date", value=today)
+                        tasklist = todo.filter_tasks(attribute="priority", value="low")
                     elif view_choice == 14:
                         today = date.today()
-                        tasklist = todo.filter_tasks(attribute="due_date", value=today, operator="<")
+                        tasklist = todo.filter_tasks(attribute="due_date", value=today)
 
                     # Show Tasks without any sorting or filtering
                     elif view_choice == 15:
-                        tasklist = todo.display_tasks()
+                        todo.display_tasks()
+
                     else:
                         print(invalid_text)
                         i = 0
                     
                     i += 1
 
-                print("Your tasks are:")
-                print()
-                print(tasklist)
-                print()
+                # Output for these choices are already printed previously
+                if view_choice not in [8, 9, 10, 15]:
+                    print("Your tasks are:")
+                    print()
+                    print(tasklist)
+                    print()
 
             elif choice == 6:       # Exit
                 if changed:
-                    file = input("Enter the filename(csv) to which you want to save your tasks: ")
-                    print()
 
-                    print("Recording Tasks... ")
-                    ToDo_List.tasks_to_csv(todo.tasklist, file)
-                    print("Successfully recorded all tasks!")
-                    print()
+                    # Asking user if he wants to save his changes
+                    while True:
+                        save = input("Do you want to save your changes (y/n)?: ").lower().strip()
 
-                print("Thanks for using the ToDo application. Have a nice day!")
+                        if save == 'y':
+                            file = input("Enter the filename(csv) to which you want to save your tasks: ")
+                            print()
+
+                            print(Fore.CYAN + "Recording Tasks... ")
+                            ToDo_List.tasks_to_csv(todo.tasklist, file)
+                            print(Fore.GREEN + "Successfully recorded all tasks!")
+                            print()
+                            break
+
+                        elif save == 'n':
+                            break
+
+                        else:
+                            print(invalid_text)
+
+                print(Fore.LIGHTYELLOW_EX + "Thanks for using the ToDo application. Have a nice day!")
                 print()
                 return
 
@@ -247,39 +311,56 @@ def main():
                 break
 
             if choice in [1,2,3,4]:     # Printing task details for add, remove, modify, and complete operations
-                print(task_str)
+                print(Fore.GREEN + task_str)
                 changed = True      # tasklist has been updated so tasks have to be recorded to a file
 
 
             print("What's next on your mind?")
             print("1. Perform the same operation")
             print("2. Perform a different operation")
-            print("3. Exit")
+            print("3. Save tasks and exit")
+            print("4. Exit without saving")
 
             while True:
-                next_action = int(input())
+                next_action = input().strip()
                 print()
+
+                # Checking if next_action is an integer
+                while True:
+                    try:
+                        next_action = int(next_action)
+                        break
+                    except Exception:
+                        print(invalid_text)
+                        next_action = input().strip()
 
                 if next_action == 1:
                     same_op = True
                     break
+
                 elif next_action == 2:
                     same_op = False
                     break
-                elif next_action == 3:
 
+                elif next_action == 3:
                     if changed:     # If the tasklist has been changed
                         file = input("Enter the filename(csv) to which you want to save your tasks: ")
                         print()
 
-                        print("Recording Tasks... ")
+                        print(Fore.CYAN + "Recording Tasks... ")
                         ToDo_List.tasks_to_csv(todo.tasklist, file)
-                        print("Successfully recorded all tasks!")
+                        print(Fore.GREEN + "Successfully recorded all tasks!")
                         print()
 
-                    print("Thanks for using the ToDo application. Have a nice day!")
+                    print(Fore.LIGHTYELLOW_EX + "Thanks for using the ToDo application. Have a nice day!")
                     print()
                     return
+                
+                elif next_action == 4:
+                    print(Fore.LIGHTYELLOW_EX + "Thanks for using the ToDo application. Have a nice day!")
+                    print()
+                    return
+                
                 else:
                     print(invalid_text)
 
