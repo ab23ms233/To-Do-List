@@ -37,7 +37,8 @@ class ToDo_List:
         - `correct_attributes`: Validates and corrects the attributes of a task.
         - `input_task`: Prompts the user to input details for a new task.
         - `add_task`: Adds a new task to the tasklist.
-        - `get_tasks`: 
+        - `get_tasks`: Returns a pd.DataFrame containing tasks based on their status (completed, pending, overdue). Displays the tasks if required.
+        - `task_to_str`: Converts a task dictionary to a formatted string representation.
         - `modify_task`: Modifies an existing task in the tasklist.
         - `complete_task`: Marks a task as completed.
         - `remove_task`: Removes a task from the tasklist by its ID.
