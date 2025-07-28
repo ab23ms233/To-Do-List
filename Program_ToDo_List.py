@@ -27,10 +27,11 @@ def main():
             except Exception:
                 print(invalid_text)
                 file_choice = input().strip()
+                print()
         
         # Importing tasks from a file
         if file_choice == 1:    
-            file = input("Enter the name of the file: ")
+            file = input("Enter the name of the csv file: ")
             # file = "tasks.csv"
             print()
 
@@ -51,7 +52,7 @@ def main():
             # Display the tasks read from the file
             print("Your tasks are:")
             print()
-            todo.display_tasks()
+            todo.get_tasks()
             print()
             break
         
@@ -78,16 +79,24 @@ def main():
         choice = input("Enter your choice: ").strip()
         print()
 
-        # Checking if choice is an integer
+        # Checking if choice is an integer and among the correct options
         while True:
-            try:
-                choice = int(choice)
-                break
-            except Exception:
+            if choice.isdigit():
+
+                if int(choice) in [1,2,3,4,5,6]:
+                    choice = int(choice)
+                    break
+                else:
+                    print(invalid_text)
+                    choice = input("Enter your choice: ").strip()
+                    print()
+            else:
                 print(invalid_text)
                 choice = input("Enter your choice: ").strip()
+                print()
 
         while True:
+
             if choice == 1:     # Adding a task
                 print(Fore.CYAN + "You choose to add a task")
                 print()
@@ -95,102 +104,127 @@ def main():
                 task = todo.input_task()
                 print()
 
-                task_str = todo.add_task(task)
-                print(Fore.GREEN + "Task Added! Details are:")
-
-            elif choice == 2:      # Removing a task
-                if not todo.tasklist:   # If there are no tasks to remove
-                    print("No tasks to remove")
-                    print()
-                    continue
-
-                print(Fore.CYAN + "You choose to remove a task")
-
-                # Displaying the tasks to remove
-                print("Your tasks are:")
-                print()
-                todo.display_tasks()
-                print()
-
-                id = int(input("Enter the id of the task you want to remove: "))
-                print()
-
-                # If task id is not valid
                 try:
-                    task_str = todo.remove_task(id)
-                    print(Fore.GREEN + "Task Removed! Details are:")
+                    task_str = Fore.GREEN + todo.add_task(task)
+                    print(Fore.GREEN + "Task Added! Details are:")
                 except Exception as e:
                     print(e)
-                    task_str = "No task removed"
+                    task_str = Fore.RED + "No task added\n"
+
+            elif choice == 2:      # Removing a task
+
+                # If there are no tasks to remove
+                if not todo.tasklist:   
+                    task_str = "No tasks to remove\n"
+                
+                else:
+                    print(Fore.CYAN + "You choose to remove a task")
+
+                    # Displaying the tasks to remove
+                    print("Your tasks are:")
+                    print()
+                    todo.get_tasks()
+                    print()
+
+                    id = int(input("Enter the id of the task you want to remove: "))
+                    print()
+
+                    # If task id is not valid
+                    try:
+                        task_str = Fore.GREEN + todo.remove_task(id)
+                        print(Fore.GREEN + "Task Removed! Details are:")
+                    except Exception as e:
+                        print(e)
+                        task_str = Fore.RED + "No task removed\n"
                 
             elif choice == 3:       # Modifying a task
-                if not todo.tasklist:   # If there are no tasks to modify
-                    print("No tasks to modify")
+
+                # If there are no tasks to modify
+                if not todo.tasklist:   
+                    task_str = "No tasks to modify\n"
+                
+                else:
+                    print(Fore.CYAN + "You choose to modify a task")
+
+                    # Displaying the tasks to modify
+                    print("Your tasks are:")
                     print()
-                    continue
-
-                print(Fore.CYAN + "You choose to modify a task")
-
-                # Displaying the tasks to modify
-                print("Your tasks are:")
-                print()
-                todo.display_tasks()
-                print()
-
-                id = int(input("Enter the id of the task you want to modify: "))
-                print()
-
-                if id not in todo.ids:
-                    print(Fore.RED + f"id {id} not present")
-                    break
-
-                print("What do you want to modify?")
-                print("1. title")
-                print("2. due_date")
-                print("3. due_time")
-
-                while True:
-                    modify = int(input())
+                    todo.get_tasks()
                     print()
 
-                    if modify == 1:     # title
-                        attr = "title"
-                        new = input("Enter new title: ")
-                        break
-                    elif modify == 2:       # due_date
-                        attr = "due_date"
-                        new = input("Enter new due date (in YYYY-MM-DD format): ")
-                        break
-                    elif modify == 3:       # due_time
-                        attr = "due_time"
-                        new = input("Enter new due time (in 24 hr HH:MM format). Else, leave blank: ")
-                        break
+                    id = int(input("Enter the id of the task you want to modify: "))
+                    print()
+
+                    # Checking if task_id is present
+                    if id not in todo.ids:
+                        print(Fore.RED + f"Task with id {id} is not present")
+                        task_str = Fore.RED + "No task modified\n"
+                    
                     else:
-                        print(invalid_text)
+                        print("What do you want to modify?")
+                        print("1. title")
+                        print("2. due_date")
+                        print("3. due_time")
 
-                task_str = todo.modify_task(id, attr, new)
-                print()
-                print(Fore.GREEN + "Task Modified! Details are:")
+                        while True:
+                            modify = int(input())
+                            print()
+
+                            if modify == 1:     # title
+                                attr = "title"
+                                new = input("Enter new title: ")
+                                break
+                            elif modify == 2:       # due_date
+                                attr = "due_date"
+                                new = input("Enter new due date (in YYYY-MM-DD format): ")
+                                break
+                            elif modify == 3:       # due_time
+                                attr = "due_time"
+                                new = input("Enter new due time (in 24 hr HH:MM format). Else, leave blank: ")
+                                break
+                            else:
+                                print(invalid_text)
+
+                        print()
+                        # Checking if new_value passed if of correct type
+                        try:
+                            task_str = Fore.GREEN + todo.modify_task(id, attr, new)
+                            print()
+                            print(Fore.GREEN + "Task Modified! Details are:")
+                        except Exception as e:
+                            print(e)
+                            task_str = Fore.RED + "No task modified\n"
 
             elif choice == 4:       # Checking off a task
-                if not todo.tasklist:   # If there are no tasks to check off
-                    print("No tasks to check off")
+
+                # If there are no tasks to check off
+                if not todo.tasklist:   
+                    task_str = "No tasks to check off\n"
+                
+                else:
+                    print(Fore.CYAN + "You choose to tick off a task")
+
+                    # Displaying the tasks to modify
+                    print("Your tasks are:")
                     print()
-                    continue
+                    tasks = todo.get_tasks(category=['overdue', 'pending'])
+                    print()
 
-                print(Fore.CYAN + "You choose to tick off a task")
+                    id = int(input("Enter the id of the task you want to check off: "))
+                    print()
 
-                # Displaying the tasks to modify
-                print("Your tasks are:")
-                print()
-                todo.display_tasks(print_task=['overdue', 'pending'])
-                print()
+                    # Checking if id is present
+                    if id not in todo.ids:
+                        print(Fore.RED + f"Task with id {id} is not present")
+                        task_str = Fore.RED + "No task ticked off\n"
+                    else:
 
-                id = int(input("Enter the id of the task you want to check off: "))
-                print()
-
-                task_str = todo.complete_task(id)
-                print(Fore.GREEN + "Congratulations on finishing your task. Details are:")
+                        # Checking if task is already completed
+                        if id not in tasks["id"].values:
+                            task_str = "Task is already complete\n"
+                        else:
+                            task_str = Fore.GREEN + todo.complete_task(id)
+                            print(Fore.GREEN + "Congratulations on finishing your task. Details are:")
 
             elif choice == 5:       # Viewing tasks
                 print()
@@ -247,11 +281,11 @@ def main():
 
                     # Filter Tasks based on user choice
                     elif view_choice == 8:
-                        todo.display_tasks(print_task='overdue')
+                        todo.get_tasks(category='overdue')
                     elif view_choice == 9:
-                        todo.display_tasks(print_task='pending')
+                        todo.get_tasks(category='pending')
                     elif view_choice == 10:
-                        todo.display_tasks(print_task='completed')
+                        todo.get_tasks(category='completed')
                     elif view_choice == 11:
                         tasklist = todo.filter_tasks(attribute="priority", value="high")
                     elif view_choice == 12:
@@ -264,7 +298,7 @@ def main():
 
                     # Show Tasks without any sorting or filtering
                     elif view_choice == 15:
-                        todo.display_tasks()
+                        todo.get_tasks()
 
                     else:
                         print(invalid_text)
@@ -274,12 +308,19 @@ def main():
 
                 # Output for these choices are already printed previously
                 if view_choice not in [8, 9, 10, 15]:
-                    print("Your tasks are:")
-                    print()
-                    print(tasklist)
+                    
+                    # Checking if tasklist is empty
+                    if len(tasklist) == 0:
+                        print("No tasks to display")
+                    
+                    else:
+                        print("Your tasks are:")
+                        print()
+                        print(tasklist)
+                    
                     print()
 
-            elif choice == 6:       # Exit
+            else:       # Exit
                 if changed:
 
                     # Asking user if he wants to save his changes
@@ -306,12 +347,8 @@ def main():
                 print()
                 return
 
-            else:       # Invalid Input
-                print(invalid_text)
-                break
-
             if choice in [1,2,3,4]:     # Printing task details for add, remove, modify, and complete operations
-                print(Fore.GREEN + task_str)
+                print(task_str)
                 changed = True      # tasklist has been updated so tasks have to be recorded to a file
 
 
@@ -340,11 +377,12 @@ def main():
 
                 elif next_action == 2:
                     same_op = False
+                    print()
                     break
 
                 elif next_action == 3:
                     if changed:     # If the tasklist has been changed
-                        file = input("Enter the filename(csv) to which you want to save your tasks: ")
+                        file = input("Enter the filename(with .csv extension) to which you want to save your tasks: ")
                         print()
 
                         print(Fore.CYAN + "Recording Tasks... ")

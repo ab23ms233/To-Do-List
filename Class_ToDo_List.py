@@ -37,7 +37,7 @@ class ToDo_List:
         - `correct_attributes`: Validates and corrects the attributes of a task.
         - `input_task`: Prompts the user to input details for a new task.
         - `add_task`: Adds a new task to the tasklist.
-        - `display_tasks`: Displays the current tasklist as a pandas DataFrame.
+        - `get_tasks`: 
         - `modify_task`: Modifies an existing task in the tasklist.
         - `complete_task`: Marks a task as completed.
         - `remove_task`: Removes a task from the tasklist by its ID.
@@ -313,68 +313,109 @@ class ToDo_List:
 
         return ToDo_List.task_to_str(task)
     
-    def display_tasks(self, print_task: Union[Literal['completed', 'pending', 'overdue'], List[str]] = ['completed', 'pending', 'overdue']) -> pd.DataFrame:
+    def get_tasks(self, category: Union[Literal['completed', 'pending', 'overdue'], List[str]] = ['completed', 'pending', 'overdue'], print_task: bool = True) -> pd.DataFrame:
         """
-        Displays the current tasklist as a pandas DataFrame, showing overdue, pending, and completed tasks.
+        Returns a DataFrame containing the current tasklist, filtered by the specified category. Prints the required tasks if print_task is True.
 
         Parameters:
-            print_task (bool, optional): If True, prints the tasklist to the console. Defaults to True.
+            category (Union[Literal['completed', 'pending', 'overdue'], List[str]], optional): Specifies which tasks to display.
+                It can be a single string or a list of strings containing any combination of 'completed', 'pending', and 'overdue'.
+                Defaults to ['completed', 'pending', 'overdue'].
+
+                *Some examples of valid inputs:*
+                - If ['completed', 'pending'] is passed, it will only display completed and pending tasks.
+                - If 'overdue' is passed, it will only display overdue tasks.
+                - If an empty list is passed, it will display all tasks without filtering.
+            
+            print_task (bool, optional): If the required tasks are to be printed. Defaults to True.
 
         Returns:
-            pd.DataFrame: A DataFrame containing the current tasklist, with each task represented as a row.
+            pd.DataFrame: A DataFrame containing the current tasklist, filtered by the specified category, with each task represented as a row.
+        
+        Raises:
+            TypeError: If category is not a string or a list of strings.
+            ValueError: If category is a string that is not one of ['completed', 'pending', 'overdue'] or if the list contains invalid values.
+            TypeError: If print_task is not a boolean value
+            
+        
+        Example:
+            >>> todo = ToDo_List([
+            ...     {"title": "Sample Task", "due_date": "2023-10-01", "due_time": "12:00", "priority": "high", "completed": False}
+            ... ])
+            >>> print(todo.display_tasks(['completed', 'pending']))
         """
-        if not (isinstance(print_task, str) or isinstance(print_task, list)):
-            raise TypeError(Fore.RED + "print_task must be either string or list of strings")
-        if isinstance(print_task, str) and print_task not in ['completed', 'pending', 'overdue']:
-            raise ValueError(Fore.RED + "print_task must be one of ['completed', 'pending', 'overdue']")
-        if isinstance(print_task, list) and not all(element in ['completed', 'pending', 'overdue'] for element in print_task):
+        if not (isinstance(category, str) or isinstance(category, list)):
+            raise TypeError(Fore.RED + "category must be either string or list of strings")
+        if isinstance(category, str) and category not in ['completed', 'pending', 'overdue']:
+            raise ValueError(Fore.RED + "category must be one of ['completed', 'pending', 'overdue']")
+        if isinstance(category, list) and not all(element in ['completed', 'pending', 'overdue'] for element in category):
             raise ValueError(Fore.RED + "All list elements must be one of ['completed', 'pending', 'overdue']")
+        if not isinstance(print_task, bool):
+            raise TypeError(Fore.RED + "print_task must be a boolean value")
+        if len(category) == 0:
+            raise ValueError(Fore.RED + "category cannot be empty")
         
         tasklist = pd.DataFrame(self.tasklist, columns=list(ToDo_List.attributes.keys()))
 
-        if print_task:
+        if len(tasklist) == 0:      # If there are no tasks to display
+            print("No tasks to display")
+            return tasklist
+        
+        tasklist["due_time"] = tasklist["due_time"].apply(lambda x: x if isinstance(x, time) else None)
 
-            if len(tasklist) == 0:
-                print("No tasks to display")
-                return tasklist
+        current_date = date.today()
+        current_time = datetime.now().time().replace(microsecond=0)
+        result = pd.DataFrame()
+        
+        # Recording overdue tasks, if there are any
+        if 'overdue' in category:    
+
+            overdue = tasklist[((tasklist["due_date"] < current_date)
+                               | ((tasklist["due_date"] == current_date)
+                                  & (tasklist["due_time"].notna()) & (tasklist["due_time"] < current_time)))
+                                & (tasklist["completed"] == False)]
             
-            tasklist["due_time"] = tasklist["due_time"].apply(lambda x: x if isinstance(x, time) else None)
-    
-            current_date = date.today()
-            current_time = datetime.now().time().replace(microsecond=0)
+            if len(overdue) != 0:
+                result = pd.concat([result, overdue], ignore_index=True)
 
-            if 'overdue' in print_task:
-                overdue = tasklist[((tasklist["due_date"] < current_date)
-                                   | ((tasklist["due_date"] == current_date)
-                                      & (tasklist["due_time"].notna()) & (tasklist["due_time"] < current_time)))
-                                    & (tasklist["completed"] == False)]
-                
-                if len(overdue) != 0:
+                # Printing tasks if print_task is True
+                if print_task:
                     print(Fore.LIGHTRED_EX + "Overdue Tasks")
                     print(f"{Fore.LIGHTRED_EX}{overdue}")
                     print()
+
+        # Recording pending tasks, if there are any
+        if 'pending' in category: 
+
+            pending = tasklist[((tasklist["due_date"] > current_date)
+                               | ((tasklist["due_date"] == current_date) 
+                                  & ((tasklist["due_time"].isna())
+                                     | (tasklist["due_time"] > current_time))))
+                               & (tasklist["completed"] == False)]
             
-            if 'pending' in print_task:
-                pending = tasklist[((tasklist["due_date"] > current_date)
-                                   | ((tasklist["due_date"] == current_date) 
-                                      & ((tasklist["due_time"].isna())
-                                         | (tasklist["due_time"] > current_time))))
-                                   & (tasklist["completed"] == False)]
-                
-                if len(pending) != 0:
+            if len(pending) != 0:
+                result = pd.concat([result, pending], ignore_index=True)
+
+                # Printing tasks if print_task is True
+                if print_task:
                     print(Fore.LIGHTCYAN_EX + "Pending Tasks")
                     print(f"{Fore.LIGHTCYAN_EX}{pending}")
                     print()
-            
-            if 'completed' in print_task:
-                completed = tasklist[tasklist["completed"] == True]
+                
+        # Recording completed tasks, if there are any
+        if 'completed' in category:       
+            completed = tasklist[tasklist["completed"] == True]
 
-                if len(completed) != 0:
+            if len(completed) != 0:
+                result = pd.concat([result, completed], ignore_index=True)
+
+                # Printing tasks if print_task is True
+                if print_task:
                     print(Fore.LIGHTGREEN_EX + "Completed Tasks")
                     print(f"{Fore.LIGHTGREEN_EX}{completed}")
                     print()
-
-        return tasklist
+                    
+        return result
 
     def modify_task(self, id: int, attribute: Literal["title", "due_date", "due_time", "priority"], new_value) -> str:
         """
@@ -407,24 +448,15 @@ class ToDo_List:
             created_at: 2023-09-30 10:00
             completed: False
         """
-        # Check for id
         if not isinstance(id, int):
-            try:
-                id = int(id)
-            except Exception:
-                raise TypeError(Fore.RED + "id must be of type int")
-            
+            raise TypeError(Fore.RED + "id must be of type int")
         if id not in self.ids:
             raise ValueError(Fore.RED + f"task with id {id} is not present") 
         
-        for i in range(len(self.ids)):
-            if id == self.tasklist[i]["id"]:
-                index = i
-                break
-
+        # Searching for task
+        index = self.ids.index(id)
         task = self.tasklist[index]
 
-        
         # Checks if the attribute is valid
         if attribute not in ["title", "due_date", "due_time", "priority"]:      
             raise ValueError(Fore.RED + "attribute must be one of ['title', 'due_date', 'due_time', 'priority']")
@@ -497,6 +529,7 @@ class ToDo_List:
             raise ValueError(Fore.RED + f"task with id {id} is not present.")
         
         index = self.ids.index(id)
+
         self.tasklist[index]["completed"] = True
         task = self.tasklist[index]
 
@@ -569,15 +602,13 @@ class ToDo_List:
         tasklist = tasklist.sort_values(by=attribute, ascending=ascending)
         return tasklist
     
-    def filter_tasks(self, attribute: Literal["due_date", "priority", "completed"], value, operator: str = "=") -> pd.DataFrame:
+    def filter_tasks(self, attribute: Literal["due_date", "priority", "completed"], value) -> pd.DataFrame:
         """
         Filters tasks in the tasklist based on a specified attribute and value.
 
         Parameters:
             attribute (Literal["due_date", "priority", "completed"]): The attribute to filter by.
             value: The value to filter the tasks by.
-            operator (str, optional): The operator to use for filtering. Defaults to "=".
-                *Note: `operator` is used only for filtering tasks whose due_date has passed in this version. However, it can be used for other tasks upon modification.*
         
         Returns:
             pd.DataFrame: A DataFrame containing the filtered tasks.
@@ -592,10 +623,7 @@ class ToDo_List:
             ... ])
             >>> filtered_tasks = todo.filter_tasks("priority", "high")
             >>> print(filtered_tasks)
-        """
-        if operator not in ["=", ">", "<", ">=", "<=", "!="]:
-            raise ValueError(Fore.RED + "operator must be one of ['=', '>', '<', '>=', '<=', '!=']")
-        
+        """        
         if attribute not in ["due_date", "priority", "completed"]:
             raise ValueError(Fore.RED + "attribute must be a value from ['due_date', 'priority', 'completed']")
         
@@ -614,13 +642,8 @@ class ToDo_List:
             elif not isinstance(value, date):
                 raise TypeError(Fore.RED + f"{attribute} must be of type date") 
         
-
         tasklist = pd.DataFrame(self.tasklist, columns=list(ToDo_List.attributes.keys()))
-
-        if operator == "=":  # Filters the tasklist based on the attribute and value
-            tasklist = tasklist[tasklist[attribute] == value]
-        elif operator == "<":   # For checking tasks whose due_date has passed
-            tasklist = tasklist[tasklist[attribute] < value]
+        tasklist = tasklist[tasklist[attribute] == value]
 
         return tasklist
 
@@ -700,7 +723,8 @@ class ToDo_List:
                     tasklist.append(task)
                     task = {}
             
-            f.close()
+                f.close()
+
             return tasklist
         
         else:
