@@ -1,11 +1,8 @@
 id,title,due_date,due_time,priority,created_at,completed
-2,Wash Clothes,08-07-2025,NA,high,07-08-2025 20:41,TRUE
-3,Exercise,08-07-2025,NA,high,07-08-2025 20:42,TRUE
-5,Complete ToDo List Project,08-07-2025,22:00:00,high,07-08-2025 20:43,FALSE
-9,Read 5 AM Club,07-09-2025,NA,moderate,09-07-2025 11:06,FALSE
-11,Go to bazaar,07-08-2025,NA,high,07-09-2025 16:37,TRUE
-12,Exercise,07-09-2025,19:00:00,high,07-09-2025 17:02,FALSE
-13,Write diary,28-07-2025,23:00:00,moderate,07-09-2025 17:03,FALSE
-15,Post about project,25-07-2025,NA,moderate,25-07-2025 12:26,FALSE
-16,Give sums to Papai,26-07-2025,14:00:00,high,26-07-2025 13:13,TRUE
-18,Go to meet maam,28-07-2025,12:00:00,moderate,28-07-2025 09:53,FALSE
+2,Wash Clothes,2025-08-07,NA,high,2025-07-08 20:41:00,True
+5,Complete ToDo List Project,2025-08-07,22:00:00,high,2025-07-08 20:43:00,False
+9,Read 5 AM Club,2025-07-09,NA,moderate,2025-09-07 11:06:00,False
+11,Go to bazaar,2025-07-08,NA,high,2025-07-09 16:37:00,True
+12,Exercise,2025-07-09,19:00:00,high,2025-07-09 17:02:00,False
+13,Write diary,2025-07-28,23:00:00,moderate,2025-07-09 17:03:00,False
+15,Post about project,2025-07-25,NA,moderate,2025-07-25 12:26:00,False
