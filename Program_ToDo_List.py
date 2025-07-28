@@ -31,7 +31,7 @@ def main():
         
         # Importing tasks from a file
         if file_choice == 1:    
-            file = input("Enter the name of the csv file: ")
+            file = input("Enter the name of the file (with .csv extension): ")
             # file = "tasks.csv"
             print()
 
@@ -106,7 +106,7 @@ def main():
 
                 try:
                     task_str = Fore.GREEN + todo.add_task(task)
-                    print(Fore.GREEN + "Task Added! Details are:")
+                    print(Fore.YELLOW + "Task Added! Details are:")
                 except Exception as e:
                     print(e)
                     task_str = Fore.RED + "No task added\n"
@@ -132,7 +132,7 @@ def main():
                     # If task id is not valid
                     try:
                         task_str = Fore.GREEN + todo.remove_task(id)
-                        print(Fore.GREEN + "Task Removed! Details are:")
+                        print(Fore.YELLOW + "Task Removed! Details are:")
                     except Exception as e:
                         print(e)
                         task_str = Fore.RED + "No task removed\n"
@@ -165,32 +165,40 @@ def main():
                         print("1. title")
                         print("2. due_date")
                         print("3. due_time")
+                        print("4. priority")
 
+                        # Check if modify is a valid input
                         while True:
-                            modify = int(input())
+                            modify = input().strip()
                             print()
 
-                            if modify == 1:     # title
-                                attr = "title"
-                                new = input("Enter new title: ")
-                                break
-                            elif modify == 2:       # due_date
-                                attr = "due_date"
-                                new = input("Enter new due date (in YYYY-MM-DD format): ")
-                                break
-                            elif modify == 3:       # due_time
-                                attr = "due_time"
-                                new = input("Enter new due time (in 24 hr HH:MM format). Else, leave blank: ")
-                                break
+                            if modify.isdigit():
+
+                                if int(modify) in [1,2,3,4]:
+                                    modify = int(modify)
+                                    break
+                                else:
+                                    print(invalid_text)
+                            
                             else:
                                 print(invalid_text)
+
+                        if modify == 1:     # title
+                            attr = "title"
+                            new = input("Enter new title: ")
+                        elif modify == 2:       # due_date
+                            attr = "due_date"
+                            new = input("Enter new due date (in YYYY-MM-DD format): ")
+                        else:       # due_time
+                            attr = "due_time"
+                            new = input("Enter new due time (in 24 hr HH:MM format). Else, leave blank: ")
 
                         print()
                         # Checking if new_value passed if of correct type
                         try:
                             task_str = Fore.GREEN + todo.modify_task(id, attr, new)
                             print()
-                            print(Fore.GREEN + "Task Modified! Details are:")
+                            print(Fore.YELLOW + "Task Modified! Details are:")
                         except Exception as e:
                             print(e)
                             task_str = Fore.RED + "No task modified\n"
@@ -224,7 +232,7 @@ def main():
                             task_str = "Task is already complete\n"
                         else:
                             task_str = Fore.GREEN + todo.complete_task(id)
-                            print(Fore.GREEN + "Congratulations on finishing your task. Details are:")
+                            print(Fore.YELLOW + "Congratulations on finishing your task. Details are:")
 
             elif choice == 5:       # Viewing tasks
                 print()
@@ -371,18 +379,21 @@ def main():
                         print(invalid_text)
                         next_action = input().strip()
 
+                # Perform same operation
                 if next_action == 1:
-                    same_op = True
+                    same_op = True      # Flag to check for same operation
                     break
-
+                
+                # Perform different operation
                 elif next_action == 2:
                     same_op = False
                     print()
                     break
-
+                
+                # Save and exit
                 elif next_action == 3:
                     if changed:     # If the tasklist has been changed
-                        file = input("Enter the filename(with .csv extension) to which you want to save your tasks: ")
+                        file = input("Enter the file(with .csv extension) to which you want to save your tasks: ")
                         print()
 
                         print(Fore.CYAN + "Recording Tasks... ")
@@ -394,11 +405,13 @@ def main():
                     print()
                     return
                 
+                # Exit without saving
                 elif next_action == 4:
                     print(Fore.LIGHTYELLOW_EX + "Thanks for using the ToDo application. Have a nice day!")
                     print()
                     return
                 
+                # Invalid Input
                 else:
                     print(invalid_text)
 

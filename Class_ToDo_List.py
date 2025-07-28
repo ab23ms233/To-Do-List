@@ -64,7 +64,7 @@ class ToDo_List:
     init(autoreset=True)  # Initialize colorama for colored output
 
     # Class attributes defining the expected types and values for task attributes
-    attributes = {"id": int, 
+    attributes: dict[str, type] = {"id": int, 
                   "title": str, 
                   "due_date": date, 
                   "due_time": time, 
@@ -325,7 +325,7 @@ class ToDo_List:
                 *Some examples of valid inputs:*
                 - If ['completed', 'pending'] is passed, it will only display completed and pending tasks.
                 - If 'overdue' is passed, it will only display overdue tasks.
-                - If an empty list is passed, it will display all tasks without filtering.
+                - If an empty list is passed, it will raise an error.
             
             print_task (bool, optional): If the required tasks are to be printed. Defaults to True.
 
@@ -570,12 +570,12 @@ class ToDo_List:
 
         return ToDo_List.task_to_str(task)
 
-    def sort_tasks(self, attribute: Union[Literal["priority", "created_at", "completed"], List], ascending: bool = False) -> pd.DataFrame:
+    def sort_tasks(self, attribute: Union[Literal["priority", "created_at", "completed"], List[str]], ascending: bool = False) -> pd.DataFrame:
         """
         Sorts the tasks in the tasklist based on a specified attribute.
 
         Parameters:
-            attribute (Union[Literal["priority", "created_at", "completed"], List]): The attribute to sort by.
+            attribute (Union[Literal["priority", "created_at", "completed"], List[str]]): The attribute to sort by.
                 It can be one of "priority", "created_at", "completed", or a list containing ["due_date", "due_time"].
             ascending (bool, optional): Whether to sort in ascending order. Defaults to False.
         
@@ -584,6 +584,7 @@ class ToDo_List:
         
         Raises:
             ValueError: If the attribute is not valid.
+            TypeError: If the ascending parameter is not a boolean value.
         
         Example:
             >>> todo = ToDo_List([
@@ -595,6 +596,8 @@ class ToDo_List:
 
         if attribute not in [["due_date", "due_time"], "priority", "created_at", "completed"]:
             raise ValueError(Fore.RED + "attribute must be a value from [['due_date', 'due_time'], 'priority', 'created_at', 'completed']")
+        if not isinstance(ascending, bool):
+            raise TypeError(Fore.RED + "ascending must be a boolean value")
         
         tasklist = pd.DataFrame(self.tasklist, columns=list(ToDo_List.attributes.keys()))
         tasklist["priority"] = pd.Categorical(tasklist["priority"], categories=ToDo_List.priority_values, ordered=True)     # Converts priority to a categorical type for sorting
@@ -661,9 +664,12 @@ class ToDo_List:
         
         Raises:
             TypeError: If the filename is not a string.
+            ValueError: If the filename does not have a .csv extension.
         """
         if not isinstance(filename, str):
             raise TypeError(Fore.RED + "filename must be a string")
+        if filename[-4:] != ".csv":
+            raise ValueError(Fore.RED + "filename must have .csv extension")
         
         f = open(filename, mode="w", newline="")
 
@@ -678,7 +684,7 @@ class ToDo_List:
             task_list.append(row)       # Preparing the tasklist for writing to the file
             row = []
 
-        writer.writerows(task_list)
+        writer.writerows(task_list)     # Writing tasks to the file
         f.close()
 
     @staticmethod
@@ -695,24 +701,29 @@ class ToDo_List:
         Raises:
             FileNotFoundError: If the specified file does not exist.
             TypeError: If the filename is not a string.
+            ValueError: If the filename does not have .csv extension.
             ValueError: If the attributes in the file do not match the expected attributes.
         """
         if not isinstance(filename, str):
             raise TypeError(Fore.RED + "filename must be a string")
+        if filename[-4:] != '.csv':
+            raise ValueError(Fore.RED + "filename must have a .csv extension")
 
         if os.path.exists(filename):    # Checking if the file exists
 
-            if os.path.getsize(filename) == 0:      # Checking if the file is empty
+            # Checking if the file is empty
+            if os.path.getsize(filename) == 0:      
                 print("The file is empty. Initialising empty tasklist... ")
                 tasklist = []
 
-            else:       # If the file is not empty, read the tasks from the file
+            # If the file is not empty, read the tasks from the file
+            else:       
                 f = open(filename, mode="r", newline="")
                 reader = csv.reader(f)
                 tasklist, task = [], {}
 
                 reader = list(reader)
-                header = reader[0]
+                header = reader[0]      # Header of the file
 
                 if header != list(ToDo_List.attributes.keys()):      # Checking if the header matches the attributes
                     raise ValueError(Fore.RED + f"Attributes in the file do not match the expected attributes: {list(ToDo_List.attributes.keys())}")
